@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+
+    <style>
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    width: 400px;
+    max-width: 100%;
+}
+
+h1 {
+    text-align: center;
+}
+
+.task-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#task-input {
+    flex: 2;
+    margin-right: 10px;
+}
+
+#due-date, #priority, #category {
+    margin-right: 10px;
+}
+
+#tasks-container {
+    margin-top: 20px;
+}
+
+.task-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f9f9f9;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+
+.task-item.completed {
+    text-decoration: line-through;
+    color: gray;
+}
+
+button {
+    cursor: pointer;
+}
+
+button.delete-task-btn {
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+button.complete-task-btn {
+    background-color: green;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    margin-right: 5px;
+}
+</style>
+</head>
+<body>
+    <div class="container">
+        <h1>To-Do List</h1>
+        <div class="task-entry">
+            <input type="text" id="task-input" placeholder="Enter a new task...">
+            <input type="date" id="due-date">
+            <select id="priority">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+            </select>
+            <select id="category">
+                <option value="work">Work</option>
+                <option value="personal">Personal</option>
+                <option value="others">Others</option>
+            </select>
+            <button id="add-task-btn">Add Task</button>
+        </div>
+        <div id="tasks-container"></div>
+    </div>
+    <script>// scripts.js
+        document.getElementById('add-task-btn').addEventListener('click', addTask);
+        
+        function addTask() {
+            const taskInput = document.getElementById('task-input');
+            const dueDateInput = document.getElementById('due-date');
+            const priorityInput = document.getElementById('priority');
+            const categoryInput = document.getElementById('category');
+            
+            if (taskInput.value === '') {
+                alert('Please enter a task.');
+                return;
+            }
+            
+            const task = {
+                id: Date.now(),
+                text: taskInput.value,
+                dueDate: dueDateInput.value,
+                priority: priorityInput.value,
+                category: categoryInput.value,
+                completed: false
+            };
+        
+            saveTask(task);
+            const taskElement = createTaskElement(task);
+            document.getElementById('tasks-container').appendChild(taskElement);
+        
+            taskInput.value = '';
+            dueDateInput.value = '';
+            priorityInput.value = 'low';
+            categoryInput.value = 'work';
+        }
+        
+        function saveTask(task) {
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks.push(task);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+        
+        function deleteTask(id) {
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks = tasks.filter(task => task.id !== id);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+        
+        function toggleTaskCompletion(id) {
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks = tasks.map(task => {
+                if (task.id === id) {
+                    task.completed = !task.completed;
+                }
+                return task;
+            });
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+        
+        function createTaskElement(task) {
+            const taskElement = document.createElement('div');
+            taskElement.classList.add('task-item');
+            
+            if (task.completed) {
+                taskElement.classList.add('completed');
+            }
+        
+            taskElement.innerHTML = `
+                <span>${task.text} (Due: ${task.dueDate}, Priority: ${task.priority}, Category: ${task.category})</span>
+                <div>
+                    <button class="complete-task-btn">Complete</button>
+                    <button class="delete-task-btn">Delete</button>
+                </div>
+            `;
+            
+            taskElement.querySelector('.complete-task-btn').addEventListener('click', () => {
+                toggleTaskCompletion(task.id);
+                taskElement.classList.toggle('completed');
+            });
+            
+            taskElement.querySelector('.delete-task-btn').addEventListener('click', () => {
+                deleteTask(task.id);
+                taskElement.remove();
+            });
+        
+            return taskElement;
+        }
+        
+        function loadTasks() {
+            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks.forEach(task => {
+                const taskElement = createTaskElement(task);
+                document.getElementById('tasks-container').appendChild(taskElement);
+            });
+        }
+        
+        window.onload = loadTasks;
+        </script>
+</body>
+</html>
